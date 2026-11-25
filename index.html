@@ -5,21 +5,77 @@
   <title>ร้านช็อกโกแลตแท่ง</title>
 </head>
 <body>
-  <h1>🍫 ช็อกโกแลตแท่ง</h1>
-  <p>สินค้า SKU-01: ดาร์กช็อกโกแลต (89 บาท)</p>
-  <p>สินค้า SKU-02: ช็อกโกแลตนม (95 บาท)</p>
-  <form>
-    <p>ชื่อผู้รับ: <input type="text" required /></p>
-    <p>เบอร์โทร: <input type="tel" required /></p>
-    <p>ที่อยู่จัดส่ง: <input type="text" required /></p>
+  <h1>ร้านช็อกโกแลตแท่ง</h1>
+
+  <div>
+    <p>SKU-01: ดาร์กช็อกโกแลต (89 บาท)</p>
+    <img src="images/choco1.jpg" alt="SKU-01" width="180" />
+  </div>
+
+  <div>
+    <p>SKU-02: ช็อกโกแลตนม (95 บาท)</p>
+    <img src="images/choco2.jpg" alt="SKU-02" width="180" />
+  </div>
+
+  <form id="orderForm">
+    <p>ชื่อผู้รับ: <input type="text" id="customer_name" required /></p>
+    <p>เบอร์โทร: <input type="tel" id="phone" required /></p>
+    <p>ที่อยู่จัดส่ง: <input type="text" id="address" required /></p>
     <p>เลือกสินค้า:
-      <select>
-        <option>SKU-01 ดาร์กช็อกโกแลต</option>
-        <option>SKU-02 ช็อกโกแลตนม</option>
+      <select id="sku">
+        <option value="SKU-01 ดาร์กช็อกโกแลต (89 บาท)" data-price="89">SKU-01 ดาร์กช็อกโกแลต</option>
+        <option value="SKU-02 ช็อกโกแลตนม (95 บาท)" data-price="95">SKU-02 ช็อกโกแลตนม</option>
       </select>
     </p>
-    <p>จำนวน: <input type="number" value="1" min="1" /></p>
+    <p>จำนวน: <input type="number" id="qty" value="1" min="1" required /></p>
     <button type="submit">สั่งซื้อ</button>
   </form>
+
+  <p id="statusMsg"></p>
+
+  <script>
+    const SCRIPT_URL = "วาง_WEB_APP_URL_ตรงนี้";
+
+    document.getElementById("orderForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const statusEl = document.getElementById("statusMsg");
+      statusEl.textContent = "กำลังส่งคำสั่งซื้อ...";
+
+      const skuSelect = document.getElementById("sku");
+      const sku = skuSelect.value;
+      const unitPrice = Number(skuSelect.options[skuSelect.selectedIndex].dataset.price);
+      const qty = Number(document.getElementById("qty").value);
+      const customerName = document.getElementById("customer_name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const totalPrice = unitPrice * qty;
+      const orderId = "ORD-" + Date.now();
+      const shippingLabel = `${customerName} | โทร: ${phone} | ที่อยู่: ${address} | สินค้า: ${sku} x${qty}`;
+
+      const payload = {
+        order_id: orderId,
+        sku: sku,
+        qty: qty,
+        total_price: totalPrice,
+        customer_name: customerName,
+        phone: phone,
+        address: address,
+        shipping_label: shippingLabel
+      };
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        statusEl.textContent = "บันทึกคำสั่งซื้อเรียบร้อยแล้ว เลขที่: " + orderId;
+        this.reset();
+      } catch (err) {
+        statusEl.textContent = "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
+      }
+    });
+  </script>
 </body>
 </html>
